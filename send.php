@@ -23,7 +23,7 @@ $items = [
         array(
                 'id'                => 'item2',
                 'price'         => 50000,
-                'quantity'         => 2,
+                'quantity'         => 1,
                 'name'                 => 'Nike N90'
         )
 ];
@@ -59,9 +59,9 @@ $customer_details = array(
 // Data yang akan dikirim untuk request redirect_url.
 // Uncomment 'secure' => true jika transaksi ingin diproses dengan 3DSecure.
 $transaction_data = array(
-        'payment_type'                         => 'vtweb',
+        'payment_type'                         => "vtweb",
         'vtweb'                         => array(
-                'enabled_payments'         => ['credit_card']
+                'enabled_payments'         => [credit_card]
         ),
         //'secure'                                => true,
         'transaction_details'         => $transaction_details,
@@ -87,26 +87,23 @@ curl_setopt($request, CURLOPT_HTTPHEADER, array(
         )
 );
 echo $json_transaction_data;
-// Excute request and parse the response
-$response = json_decode(curl_exec($request));
-echo $response;
 
-$result = file_get_contents('http://requestb.in/slj6x2sl');
+
+echo '<br><br>';
+echo 'test123 <br>';
+
+//$response = json_decode(curl_exec($request));
+
+
+$opts = array('http' => array(
+        'header'  => array('Content-type: application/json', 'Accept: application/json', $auth),
+        'method'  => 'POST',
+        'content' => $json_transaction_data
+    )
+);
+$context  = stream_context_create($opts);
+$result = file_get_contents($endpoint, false, $context);
+
 echo $result;
 
-// Check Response
-// if($response->status_code == "201")
-// {
-//         //success
-//         //redirect to vtweb payment page
-//         header("Location: ".$response->redirect_url);
-// }
-// else
-// {
-//         //error
-//         echo "Terjadi kesalahan pada data transaksi yang dikirim.<br />";
-//         echo "Status message: [".$response->status_code."] ".$response->status_message;
-//         echo "<h3>Response:</h3>";
-//         var_dump($response);
-// }
 ?>
