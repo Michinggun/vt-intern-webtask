@@ -72,9 +72,11 @@ $customer_details = array(
 // Data yang akan dikirim untuk request charge transaction dengan credit card.
 $payment = $_POST['pay_type'];
 if($payment == 'cimb_clicks'){
-	echo "CIMB COY!";
 	$transaction_data_start = array(
 		'payment_type' => $_POST['pay_type']
+	);
+	$transaction_data_last = array(
+	'cimb_clicks' => array("description" => 'Contoh Deskripsi')
 	);
 }else if($payment == 'credit_card'){
 	$transaction_data_start = array(
@@ -85,25 +87,43 @@ if($payment == 'cimb_clicks'){
 			'save_token_id'			=> isset($_POST['save_cc'])
 			)
 	);
+	$transaction_data_last = array();
 }else if($payment == 'mandiri_clickpay'){
-
+	$transaction_data_start = array(
+		'payment_type' => $_POST['pay_type']
+	);
+	$transaction_data_last = array(
+		'mandiri_clickpay' => array(
+			'card_number' => '4111111111111111',
+			'input1' => '1111111111',
+			'input2' => '200000',
+			'input3' => '00000',
+			'token' => '000000'
+			)
+	);
 }else if($payment == 'permata'){
-
+	$transaction_data_start = array(
+		'payment_type' => $_POST['pay_type']
+	);
+	$transaction_data_last = array();
 }else if($payment == 'bii'){
-
+	$transaction_data_start = array(
+		'payment_type' => $_POST['pay_type']
+	);
+	$transaction_data_last = array();
 }
 
-$transaction_data = array(
-	'payment_type' 			=> 'credit_card', 
-	'credit_card' 			=> array(
-		'token_id' 	=> $token_id,
-		'bank' 			=> 'bni',
-		'save_token_id'			=> isset($_POST['save_cc'])
-		),
-	'transaction_details' 	=> $transaction_details,
-	'item_details' 					=> $items,
-	'customer_details' 			=> $customer_details
-);
+// $transaction_data = array(
+// 	'payment_type' 			=> 'credit_card', 
+// 	'credit_card' 			=> array(
+// 		'token_id' 	=> $token_id,
+// 		'bank' 			=> 'bni',
+// 		'save_token_id'			=> isset($_POST['save_cc'])
+// 		),
+// 	'transaction_details' 	=> $transaction_details,
+// 	'item_details' 					=> $items,
+// 	'customer_details' 			=> $customer_details
+// );
 
 
 
@@ -113,10 +133,12 @@ $transaction_data_mid = array(
 	'customer_details' 			=> $customer_details
 );
 
-$transaction_data_last = array(
-	);
 
-$json_transaction_data = json_encode($transaction_data);
+
+$transaction_data_final = array_merge($transaction_data_start,array_merge($transaction_data_mid,$transaction_data_last));
+
+$json_transaction_data = json_encode($transaction_data_final);;
+//$json_transaction_data = json_encode($transaction_data);
 
 // Mengirimkan request dengan menggunakan CURL
 // HTTP METHOD : POST
@@ -167,10 +189,25 @@ else if($response->transaction_status == "challenge")
 	echo "<h3>Detail transaksi:</h3>";
 	var_dump($response);
 }
+else if($response->transaction_status == "settlement"){
+	echo "Transaksi settlement. <br />";
+	echo "Status transaksi untuk order id ".$response->order_id.": ".$response->transaction_status;
+
+	echo "<h3>Detail transaksi:</h3>";
+	var_dump($response);
+}
+else if($response->transaction_status == "pending"){
+	echo "Transaksi pending. <br />";
+	echo "Status transaksi untuk order id ".$response->order_id.": ".$response->transaction_status;
+
+	echo "<h3>Detail transaksi:</h3>";
+	var_dump($response);
+}
 else
-{
+{	
 	//error
-	echo "Terjadi kesalahan pada data transaksi yang dikirim.<br />";
+	echo "Terjadi kesalahan pada data transaksi yang dikirim.<br />";	
+	
 	echo "Status message: [".$response->status_code."] ".$response->status_message;
 
 	echo "<h3>Response:</h3>";
