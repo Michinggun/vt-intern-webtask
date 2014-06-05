@@ -6,7 +6,6 @@
 	<h2>Item </h2>
 	
 	Order ID: <input type="text" name="order_id"><br>
-	Gross Amount: <input type="text" name="gross_amount"><br>
 	
 	Item ID: <input type="text" name="item_id"><br>
 	Item Price: <input type="text" name="item_price"><br>

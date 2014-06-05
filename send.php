@@ -8,9 +8,12 @@ $server_key = "6d7ccd71-ea52-43cc-ac42-5402077bd6c6";
 $endpoint = "https://api.sandbox.veritrans.co.id/v2/charge";
 // production environment:
 //$endpoint = "https://api.sandbox.veritrans.co.id/v2/charge";
+
+$gross = ($_POST["item_price"] * $_POST["item_quantity"]) + 50000;
+
 $transaction_details = array(
         'order_id'                 => $_POST["order_id"],
-        'gross_amount'         => $_POST["gross_amount"]
+        'gross_amount'         => $gross
 );
 // Populate items
 $items = [
@@ -86,24 +89,40 @@ curl_setopt($request, CURLOPT_HTTPHEADER, array(
         $auth
         )
 );
-echo $json_transaction_data;
+//echo $json_transaction_data;
 
+// Excute request and parse the response
+curl_setopt($request, CURLOPT_SSL_VERIFYPEER, false);
+$curl_response = curl_exec($request);
 
-echo '<br><br>';
-echo 'test123 <br>';
+$response = json_decode($curl_response);
 
-//$response = json_decode(curl_exec($request));
+// Check Response
+if($response->status_code == "201")
+{
+    //success
+    //redirect to vtweb payment page
+    header("Location: ".$response->redirect_url);
+}
+else
+{
+    //error
+    echo "Terjadi kesalahan pada data transaksi yang dikirim.<br />";
+    echo "Status message: [".$response->status_code."] ".$response->status_message;
 
+    echo "<h3>Response:</h3>";
+    var_dump($response);
+}
 
-$opts = array('http' => array(
-        'header'  => array('Content-type: application/json', 'Accept: application/json', $auth),
-        'method'  => 'POST',
-        'content' => $json_transaction_data
-    )
-);
-$context  = stream_context_create($opts);
-$result = file_get_contents($endpoint, false, $context);
+// $opts = array('http' => array(
+//         'header'  => array('Content-type: application/json', 'Accept: application/json', $auth),
+//         'method'  => 'POST',
+//         'content' => $json_transaction_data
+//     )
+// );
+// $context  = stream_context_create($opts);
+// $result = file_get_contents($endpoint, false, $context);
 
-echo $result;
+// echo $result;
 
 ?>
