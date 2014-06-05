@@ -1,0 +1,121 @@
+<html>
+<head>
+	<title>Checkout</title>
+	<!-- Include PaymentAPI (MANDATORY)-->
+	<script type="text/javascript" src="https://api.sandbox.veritrans.co.id/v2/assets/js/veritrans.js"></script>
+	<!-- 
+	Include JQuery & JQuery Fancy Box.
+	In this sample, we use JQuery & JQuery Fancy to simplify the process when showing 3D Secure dialog. Feel free to use your own implementation or your prefered JS framework. 
+	-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+	<script type="text/javascript" src="js/jquery.fancybox.pack.js"></script>
+	<link rel="stylesheet" href="css/jquery.fancybox.css" type="text/css" media="screen" />
+
+</head>
+<body>
+	<h1>Checkout</h1>
+	<span id="message"></span>
+	<form action="checkout_process.php" method="POST" id="payment-form">
+		<p>
+			<label>Card Number</label>
+			<input class="card-number" value="4111111111111111" size="20" type="text" autocomplete="off"/>
+		</p>
+		<p>
+			<label>Expiration (MM/YYYY)</label>
+			<input class="card-expiry-month" value="12" placeholder="MM" size="2" type="text" />
+	    	<span> / </span>
+	    	<input class="card-expiry-year" value="2018" placeholder="YYYY" size="4" type="text" />
+		</p>
+		<p>
+	    	<label>CVV</label>
+	    	<input class="card-cvv" value="123" size="4" type="password" autocomplete="off"/>
+		</p>
+		<p>
+			<label>Pay with</label>
+			<select name="pay_type">
+				<option value="credit_card">Credit Card</option>
+	  			<option value="mandiri_clickpay">Mandiri ClickPay</option>
+	  			<option value="permata">Bank Permata Virtual Account</option>
+				<option value="bii">Bank BII Virtual Account</option>
+	  			<option value="cimb_clicks">CIMB Clicks</option>
+			</select>
+		</p>
+		<input id="token_id" name="token_id" type="hidden" />
+		<button class="submit-button" type="submit">Pay</button>
+	</form>
+
+	<!-- Javascript to generate token and show 3DSecure Dialog -->
+	<script type="text/javascript">
+	$(function(){
+		// Sandbox API URL. TODO: Change with Production API URL when you're ready to go live.
+		Veritrans.url = "https://api.sandbox.veritrans.co.id/v2/token";
+		// TODO: Change with your actual client key that can be found at Merchant Administration Portal >> Setting >> Access Key
+		//Veritrans.client_key = "b937a339-234e-4e2f-8182-4e5391711555";
+		Veritrans.client_key = "bb558bb6-371a-415b-b7ee-bf285f33868f";
+		var card = function(){
+			return {
+				'card_number'		: $(".card-number").val(),
+				'card_exp_month': $(".card-expiry-month").val(),
+				'card_exp_year'	: $(".card-expiry-year").val(),
+				'card_cvv'			: $(".card-cvv").val()
+
+				// Set 'secure', 'bank', and 'gross_amount', if the merchant wants transaction to be processed with 3D Secure
+				// 'secure'				: true,
+				// 'bank'				: 'bni',
+				// 'gross_amount'		: 200000
+			}
+		};
+
+		// handler when user click the 'Pay' button.
+		$('.submit-button').click(function(event){
+			event.preventDefault();
+			$(this).attr("disabled", "disabled"); 
+			Veritrans.token(card, callback);
+			return false;
+		});
+
+		function callback(response) {
+			if (response.redirect_url) {
+				// 3Dsecure transaction. Open 3Dsecure dialog
+				console.log('Open Dialog 3Dsecure');
+				openDialog(response.redirect_url);
+
+			} else if (response.status_code == '200') {
+				// success 3d secure or success normal
+				closeDialog();
+
+				// store token data in input #token_id and then submit form to merchant server
+				$("#token_id").val(response.token_id);
+				$("#payment-form").submit();
+			} else {
+				// failed request token
+				closeDialog();
+				$('.submit-button').removeAttr('disabled');
+				// Show status message.
+				$('#message').text(response.status_message);
+				console.log(JSON.stringify(response));
+			}
+		}
+
+		// Open 3DSecure dialog box
+		function openDialog(url) {
+			$.fancybox.open({
+		        href: url,
+		        type: 'iframe',
+		        autoSize: false,
+		        width: 700,
+		        height: 500,
+		        closeBtn: false,
+		        modal: true
+		    });
+		}
+
+		// Close 3DSecure dialog box
+		function closeDialog() {
+			$.fancybox.close();
+		}
+	});
+
+	</script>
+</body>
+</html>
